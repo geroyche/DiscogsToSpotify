@@ -304,6 +304,9 @@ function addArtistsAndReleases(result) {
         var releaseArtists = release.basic_information.artists;
         var artistNameRaw = releaseArtists[0].name;
         var artistNameVariationRaw = releaseArtists[0].anv;
+
+        // set the ANV as release artist if it exists. this corresponds to the artist name users actually see on the discogs release page
+        // we will later retry the search with the main artist name if no result was found
         var artistNameToUse = artistNameVariationRaw != null && artistNameVariationRaw.length > 0 ? artistNameVariationRaw : artistNameRaw;
 
         //Some artists on Discogs have a number in closing round parenthesis behing their name. We don't want these.
