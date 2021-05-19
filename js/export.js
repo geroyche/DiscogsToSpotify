@@ -521,7 +521,7 @@ function showNoMatch() {
 
 
 /** Start a search on Spotify and handle the result */
-function searchReleaseOnSpotify(release, artistName) {
+function searchReleaseOnSpotify(release, artistMainName) {
 
     var rArtist = release.artistName;
     if (rArtist) {
@@ -558,10 +558,10 @@ function searchReleaseOnSpotify(release, artistName) {
         type: "GET",
         success: function (result) {
             // no result, but release artist was an ANV
-            if (result.albums.total === 0 && release.artistName !== artistName) {
+            if (result.albums.total === 0 && release.artistName !== artistMainName) {
                 // update the release artist name and retry
-                release.artistName = artistName;
-                searchReleaseOnSpotify(release, artistName)
+                release.artistName = artistMainName;
+                searchReleaseOnSpotify(release, artistMainName)
             } else {
                 handleResultFromSpotify(result, release);
             }
@@ -571,7 +571,7 @@ function searchReleaseOnSpotify(release, artistName) {
             if (data === "Too Many Requests"  || data === "Bad Gateway") {
 
                 //Wait a few seconds, then try again
-                setTimeout(searchReleaseOnSpotify, 2000, release);
+                setTimeout(searchReleaseOnSpotify, 2000, release, artistMainName);
             } else {
 
                 $('#errorModalText').html("Something went wrong while searching on Spotify: " + data + ". Please try again.");
