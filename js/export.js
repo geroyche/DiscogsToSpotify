@@ -304,7 +304,7 @@ function addArtistsAndReleases(result) {
         var releaseArtists = release.basic_information.artists;
         var artistNameRaw = releaseArtists[0].name;
         var artistNameVariationRaw = releaseArtists[0].anv;
-        var artistNameToUse = artistNameVariationRaw.length > 0 ? artistNameVariationRaw : artistNameRaw;
+        var artistNameToUse = artistNameVariationRaw != null && artistNameVariationRaw.length > 0 ? artistNameVariationRaw : artistNameRaw;
 
         //Some artists on Discogs have a number in closing round parenthesis behing their name. We don't want these.
         var splitName = artistNameToUse.split(/([(]\d+[)].*)/);
