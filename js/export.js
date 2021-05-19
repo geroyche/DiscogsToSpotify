@@ -302,15 +302,17 @@ function addArtistsAndReleases(result) {
         var releaseTitle = release.basic_information.title;
         var releaseYear = release.basic_information.year;
         var releaseArtists = release.basic_information.artists;
-        var releaseArtistName = releaseArtists[0].name;
+        var artistNameRaw = releaseArtists[0].name;
+        var artistNameVariationRaw = releaseArtists[0].anv;
+        var artistNameToUse = artistNameVariationRaw.length > 0 ? artistNameVariationRaw : artistNameRaw;
 
         //Some artists on Discogs have a number in closing round parenthesis behing their name. We don't want these.
-        var splitName = releaseArtistName.split(/([(]\d+[)].*)/);
-        var artistName = splitName[0].trim();
+        var splitName = artistNameToUse.split(/([(]\d+[)].*)/);
+        var releaseArtistName = splitName[0].trim();
 
-        var thisRelease = new releaseObject(releaseTitle, artistName, releaseYear);
+        var thisRelease = new releaseObject(releaseTitle, releaseArtistName, releaseYear);
 
-        var positionInGlobalArray = artistsContainsName(releaseArtistName);
+        var positionInGlobalArray = artistsContainsName(artistNameRaw);
 
         if (positionInGlobalArray != -1) {
 
@@ -326,7 +328,7 @@ function addArtistsAndReleases(result) {
         } else {
 
             //Create new artist with new release-array and add artist to the global array
-            globalArtists.push(new artist(releaseArtistName, new Array(thisRelease)));
+            globalArtists.push(new artist(artistNameRaw, new Array(thisRelease)));
             totalReleases++;
             totalArtists++;
 
@@ -361,7 +363,6 @@ function createPlaylist() {
             playlistID = result.id;
 
             updateProgressBar(20);
-
             exportToSpotify();
 
         },
@@ -374,10 +375,7 @@ function createPlaylist() {
 
         }
     });
-
 }
-
-
 
 /** Gets the next artist from the global array and exports the artist's releases to Spotify */
 function exportToSpotify() {
@@ -390,9 +388,7 @@ function exportToSpotify() {
         var releases = artist.releases;
 
         $.each(releases, function (pos, release) {
-
-            searchReleaseOnSpotify(release);
-
+            searchReleaseOnSpotify(release, artist.name);
         });
 
         adedArtistCount++;
@@ -525,7 +521,7 @@ function showNoMatch() {
 
 
 /** Start a search on Spotify and handle the result */
-function searchReleaseOnSpotify(release) {
+function searchReleaseOnSpotify(release, artistName) {
 
     var rArtist = release.artistName;
     if (rArtist) {
@@ -546,7 +542,6 @@ function searchReleaseOnSpotify(release) {
         }
     }
 
-
     var query = 'album:"' + rTitle + '" artist:"' + rArtist + '"';
 
     $.ajax({
@@ -562,8 +557,14 @@ function searchReleaseOnSpotify(release) {
         },
         type: "GET",
         success: function (result) {
-
-            handleResultFromSpotify(result, release);
+            // no result, but release artist was an ANV
+            if (result.albums.total === 0 && release.artistName !== artistName) {
+                // update the release artist name and retry
+                release.artistName = artistName;
+                searchReleaseOnSpotify(release, artistName)
+            } else {
+                handleResultFromSpotify(result, release);
+            }
         },
         error: function (request, xhr, data) {
 
